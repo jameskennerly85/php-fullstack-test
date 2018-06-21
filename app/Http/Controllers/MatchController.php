@@ -1,24 +1,40 @@
 <?php
-
 namespace App\Http\Controllers;
 
+use App\Services\MatchService;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Input;
 
-class MatchController extends Controller {
+class MatchController extends Controller
+{
+    /**
+     * @var MatchService
+     */
+    protected $matchService;
+
+    /**
+     * @param MatchService $matchService
+     */
+    public function __construct(MatchService $matchService)
+    {
+        $this->matchService = $matchService;
+    }
 
     public function index() {
         return view('index');
     }
 
     /**
-     * Returns a list of matches
+     * Returns a list of joinable matches
      *
-     * TODO it's mocked, make this work :)
-     *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function matches() {
-        return response()->json($this->fakeMatches());
+    public function matches(): JsonResponse
+    {
+        $joinableMatches = $this->matchService->allJoinableMatches();
+
+        return response()->json($joinableMatches);
     }
 
     /**
@@ -73,12 +89,14 @@ class MatchController extends Controller {
     /**
      * Creates a new match and returns the new list of matches
      *
-     * TODO it's mocked, make this work :)
-     *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function create() {
-        return response()->json($this->fakeMatches());
+    public function create(Request $request): JsonResponse
+    {
+        $inputs = $request->only('name');
+        $this->matchService->createMatch($inputs);
+
+        return $this->matches();
     }
 
     /**
