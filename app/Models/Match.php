@@ -1,6 +1,7 @@
 <?php
 namespace App\Models;
 
+use App\Exceptions\Model\InvalidBoardSettingException;
 use Illuminate\Database\Eloquent\Model;
 
 class Match extends Model
@@ -19,6 +20,16 @@ class Match extends Model
      * @var array
      */
     protected $fillable = ['name'];
+
+    /**
+     * @var array
+     */
+    private $rules = [
+        'name'   => 'string',
+        'next'   => 'integer|in:1,2',
+        'winner' => 'integer|in:0,1,2',
+        'board'  => 'string|size:17',
+    ];
 
     /**
      * @param $value
@@ -45,9 +56,17 @@ class Match extends Model
     /**
      * @param array $value
      * @return void
+     * 
+     * @throws InvalidBoardSettingException
      */
     public function setBoardAttribute(array $value)
     {
-        $this->attributes['board'] = implode(',', $value);
+        $strVal = implode(',', $value);
+        
+        if (preg_match('/^[0-2](,[0-2]){8}$/', $strVal) !== 1) {
+            throw new InvalidBoardSettingException;
+        }
+
+        $this->attributes['board'] = $strVal;
     }
 }
