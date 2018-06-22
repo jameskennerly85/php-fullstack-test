@@ -2,6 +2,7 @@
 namespace App\Models;
 
 use App\Exceptions\Model\InvalidBoardSettingException;
+use App\Exceptions\Model\InvalidMatchMoveException;
 use Illuminate\Database\Eloquent\Model;
 
 class Match extends Model
@@ -50,7 +51,9 @@ class Match extends Model
      */
     public function getBoardAttribute($value): array
     {
-        return explode(',', $value);
+        return array_map(function ($n) {
+            return intval($n);
+        }, explode(',', $value));
     }
 
     /**
@@ -68,5 +71,44 @@ class Match extends Model
         }
 
         $this->attributes['board'] = $strVal;
+    }
+
+    /**
+     * @param int $position
+     * @return int
+     */
+    public function getBoardPosition(int $position): int
+    {
+        return $this->board[$position];
+    }
+
+    /**
+     * @param int $position
+     * @param int $value
+     * @return Match
+     */
+    public function setBoardPosition($position, $value): Match
+    {
+        $board = $this->board;
+        $board[$position] = $value;
+        $this->board = $board;
+
+        return $this;
+    }
+
+    /**
+     * @param int $position
+     * @param int $value
+     * @return Match
+     *
+     * @throws InvalidMatchMoveException
+     */
+    public function playOnPosition($position, $value): Match
+    {
+        if ($this->getBoardPosition($position) !== 0) {
+            throw new InvalidMatchMoveException;
+        }
+
+        return $this->setBoardPosition($position, $value);
     }
 }
