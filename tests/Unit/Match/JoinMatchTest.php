@@ -20,12 +20,10 @@ class JoinMatchTest extends TestCase
 
     public function test_shouldJoinValidMatch()
     {
-        $this->matchService->createMatch([
-            'id' => 1,
+        $match = $this->matchService->createMatch([
             'name' => 'My Test Match',
         ]);
 
-        $match = $this->matchService->getJoinable(1);
         $this->assertInstanceOf(\App\Models\Match::class, $match);
     }
 
