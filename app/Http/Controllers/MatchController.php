@@ -102,15 +102,14 @@ class MatchController extends Controller
     /**
      * Deletes the match and returns the new list of matches
      *
-     * TODO it's mocked, make this work :)
-     *
      * @param $id
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function delete($id) {
-        return response()->json($this->fakeMatches()->filter(function($match) use($id){
-            return $match['id'] != $id;
-        })->values());
+    public function delete($id): JsonResponse
+    {
+        $this->matchService->deleteMatch($id);
+
+        return $this->matches();
     }
 
     /**
