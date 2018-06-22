@@ -3,10 +3,24 @@ namespace App\Services;
 
 use App\Exceptions\Model\MatchIsNotJoinableException;
 use App\Models\Match;
+use App\Validators\MatchServiceValidator;
 use Illuminate\Support\Collection;
 
 class MatchService
 {
+    /**
+     * @var MatchServiceValidator
+     */
+    protected $validator;
+
+    /**
+     * @param MatchServiceValidator $validator
+     */
+    public function __construct(MatchServiceValidator $validator)
+    {
+        $this->validator = $validator;
+    }
+
     /**
      * Return collection of all joinable matches.
      *
@@ -47,7 +61,7 @@ class MatchService
      */
     public function createMatch(array $attributes = []): Match
     {
-        return Match::create($attributes);
+        return Match::create($attributes)->refresh();
     }
 
     /**
@@ -59,5 +73,34 @@ class MatchService
     public function deleteMatch(int $matchId)
     {
         Match::where('id', $matchId)->delete();
+    }
+
+    /**
+     * @param array $attributes
+     * @return Match
+     *
+     * @throws \Prettus\Validator\Exceptions\ValidatorException
+     * @throws \App\Exceptions\Model\InvalidMatchMoveException
+     */
+    public function attemptMove(array $attributes): Match
+    {
+        $this->validator
+            ->with($attributes)
+            ->passesOrFail(MatchServiceValidator::$RULE_MOVE)
+        ;
+
+        $match = Match::find($attributes['id']);
+        $match->playOnPosition($attributes['position'], $match->next);
+
+        $nextPlayer = 1;
+
+        if ($match->next === 1) {
+            $nextPlayer = 2;
+        }
+
+        $match->next = $nextPlayer;
+        $match->save();
+
+        return $match;
     }
 }

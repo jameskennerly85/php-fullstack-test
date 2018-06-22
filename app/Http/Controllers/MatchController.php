@@ -53,28 +53,18 @@ class MatchController extends Controller
     /**
      * Makes a move in a match
      *
-     * TODO it's mocked, make this work :)
-     *
-     * @param $id
-     * @return \Illuminate\Http\JsonResponse
+     * @param int $id
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function move($id) {
-        $board = [
-            1, 0, 2,
-            0, 1, 2,
-            0, 0, 0,
-        ];
-
-        $position = Input::get('position');
-        $board[$position] = 2;
-
-        return response()->json([
+    public function move($id, Request $request): JsonResponse
+    {
+        $match = $this->matchService->attemptMove([
             'id' => $id,
-            'name' => 'Match'.$id,
-            'next' => 1,
-            'winner' => 0,
-            'board' => $board,
+            'position' => $request->get('position')
         ]);
+
+        return response()->json($match);
     }
 
     /**
