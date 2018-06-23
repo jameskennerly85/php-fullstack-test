@@ -4,6 +4,7 @@ namespace App\Services;
 use App\Exceptions\Model\MatchIsNotJoinableException;
 use App\Models\Match;
 use App\Validators\MatchServiceValidator;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
 
 class MatchService
@@ -29,6 +30,19 @@ class MatchService
     public function allJoinableMatches(): Collection
     {
         return Match::where('winner', 0)->get();
+    }
+
+    /**
+     * Return a particular match by ID.
+     *
+     * @param int $id
+     * @return Match
+     *
+     * @throws ModelNotFoundException
+     */
+    public function getMatch($id): Match
+    {
+        return Match::findOrFail($id);
     }
 
     /**
@@ -79,8 +93,8 @@ class MatchService
      * @param array $attributes
      * @return Match
      *
-     * @throws \Prettus\Validator\Exceptions\ValidatorException
      * @throws \App\Exceptions\Model\InvalidMatchMoveException
+     * @throws \Prettus\Validator\Exceptions\ValidatorException
      */
     public function attemptMove(array $attributes): Match
     {
@@ -92,6 +106,8 @@ class MatchService
         $match = Match::find($attributes['id']);
         $match->playOnPosition($attributes['position'], $match->next);
 
+        $this->checkForWinner($match);
+
         $nextPlayer = 1;
 
         if ($match->next === 1) {
@@ -102,5 +118,49 @@ class MatchService
         $match->save();
 
         return $match;
+    }
+
+    /**
+     * @param Match $match
+     * @return void
+     */
+    public function checkForWinner(Match $match)
+    {
+        $board = $match->board;
+        $player = $match->next;
+
+        $winningLines = [
+            'R1' => [0,1,2],
+            'R2' => [3,4,5],
+            'R3' => [6,7,8],
+
+            'C1' => [0,3,6],
+            'C2' => [1,4,7],
+            'C3' => [2,5,8],
+
+            'D1' => [0,4,8],
+            'D2' => [6,4,2],
+        ];
+
+        foreach ($winningLines as $line) {
+            $winner = true;
+
+            foreach ($line as $pos) {
+                $value = $board[$pos];
+
+                if ($value === 0 || $value !== $player) {
+                    $winner = false;
+                    break;
+                }
+            }
+
+            if ($winner) {
+                break;
+            }
+        }
+
+        if ($winner) {
+            $match->winner = $player;
+        }
     }
 }

@@ -21,7 +21,8 @@ class MatchController extends Controller
         $this->matchService = $matchService;
     }
 
-    public function index() {
+    public function index()
+    {
         return view('index');
     }
 
@@ -42,10 +43,12 @@ class MatchController extends Controller
      *
      * @param $id
      * @return JsonResponse
+     *
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      */
     public function match($id): JsonResponse
     {
-        $match = $this->matchService->getJoinable($id);
+        $match = $this->matchService->getMatch($id);
 
         return response()->json($match);
     }
@@ -56,6 +59,9 @@ class MatchController extends Controller
      * @param int $id
      * @param Request $request
      * @return JsonResponse
+     *
+     * @throws \App\Exceptions\Model\InvalidMatchMoveException
+     * @throws \Prettus\Validator\Exceptions\ValidatorException
      */
     public function move($id, Request $request): JsonResponse
     {
