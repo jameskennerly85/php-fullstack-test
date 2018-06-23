@@ -2,11 +2,14 @@
 
 namespace App\Exceptions;
 
+use App\Traits\ApiCompliantErrorRendering;
 use Exception;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 
 class Handler extends ExceptionHandler
 {
+    use ApiCompliantErrorRendering;
+
     /**
      * A list of the exception types that are not reported.
      *
@@ -46,6 +49,11 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Exception $exception)
     {
+        // Output API-compliant error object
+        if ($this->checkForApiRender($exception)) {
+            return $this->getApiCompliantErrorOutput($exception);
+        }
+
         return parent::render($request, $exception);
     }
 }
